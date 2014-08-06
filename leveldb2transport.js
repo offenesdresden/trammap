@@ -88,6 +88,7 @@ resolveLoop(function(err, resolved) {
                             return {
                                 type: 'node',
                                 role: rel.role,
+                                id: el.id,
                                 lat: el.lat,
                                 lon: el.lon,
                                 name: el.tags.name
@@ -96,19 +97,27 @@ resolveLoop(function(err, resolved) {
                             return {
                                 type: 'way',
                                 role: rel.role,
+                                id: el.id,
                                 maxspeed: el.tags.maxspeed,
                                 nodes: (el.refs || []).map(function(id) {
                                     return resolved[id];
                                 }).filter(function(node) {
-                                    return node.lat && node.lon;
+                                    if (node.lat && node.lon) {
+                                        return true;
+                                    } else {
+                                        console.log("drop node", node);
+                                        return false;
+                                    }
                                 }).map(function(node) {
                                     return {
+                                        id: node.id,
                                         lat: node.lat,
                                         lon: node.lon
                                     };
                                 })
                             };
                         } else {
+                            console.log("skip member", rel);
                             return null;
                         }
                     })
