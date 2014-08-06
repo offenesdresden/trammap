@@ -14,38 +14,54 @@ $.ajax({
     }
 });
 
+var lines = [];
 function loadLines(files) {
     var file = files.shift();
     if (!file) {
         /* Done loading all */
+        drawLines();
         return;
     }
 
     $.ajax({
         url: "lines/" + file,
-        success: function(line) {
-            addLine(line);
+        success: function(lines_) {
+            lines = lines.concat(lines_);
             loadLines(files);
         }
     });
 }
 
-function addLine(tracks) {
-    var color = "hsl(" + Math.floor(360 * Math.random()) + ", 80%, 20%)";
-    tracks.forEach(function(track) {
-        track.members.forEach(function(way) {
-            if (way.type !== 'way') {
+function drawLines() {
+    var l = 0;
+    lines.forEach(function(line) {
+        var t = 0;
+        line.members.forEach(function(el) {
+            if (el.type !== 'way' || el.role !== '') {
                 return;
             }
+            console.log("el", el);
 
-            L.polyline(way.nodes, {
-                color: color,
-                weight: 3,
-                opacity: 0.8,
-                lineCap: 'butt',
-                lineJoin: 'round'
-            })
-                .addTo(map);
+            var prev;
+            el.nodes.forEach(function(node) {
+                if (prev) {
+                    var hue = Math.floor(360 * l / lines.length);
+                    var sat = 100;
+                    var light = Math.ceil(100 * t / line.members.length);
+                    var color = "hsl(" + hue + ", " + sat + "%, " + light + "%)";
+                    L.polyline([prev, node], {
+                        color: color,
+                        weight: 3,
+                        opacity: 0.6,
+                        lineCap: 'butt',
+                        lineJoin: 'round'
+                    })
+                        .addTo(map);
+                }
+                prev = node;
+            });
+            t++;
         });
+        l++;
     });
 }
